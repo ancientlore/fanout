@@ -55,4 +55,5 @@ until it is finished.
 .link https://golang.org/pkg/context/
 .link https://blog.golang.org/context
 .link https://blog.golang.org/pipelines
+.link https://blog.golang.org/concurrency-is-not-parallelism
 .background media/plane_bg.png

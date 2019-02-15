@@ -8,3 +8,4 @@ Good reading:
 * https://golang.org/pkg/context/
 * https://blog.golang.org/context
 * https://blog.golang.org/pipelines
+* https://blog.golang.org/concurrency-is-not-parallelism
