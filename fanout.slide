@@ -1,0 +1,58 @@
+fanout
+A demo showing how to process incoming requests in parallel.
+18:00 20 Feb 2019
+Tags: golang, channel, concurrency, demo, producer, consumer
+
+Michael Lore
+Principal Architect, SAP Concur
+@ancientlore
+https://github.com/ancientlore/fanout
+
+* About Me
+- Central Architecture Team at SAP Concur
+- Designed the booking engine powering Concur Travel
+- Playing with Go since 2010
+- Interested in concurrent applications in the travel space
+.image media/gopher.png
+.background media/plane_bg.png
+
+* Producer/Consumer Demo applications
+We're creating a simple producer-consumer demo application.
+.code -numbers main.go /Start the producer/,/consumer\(/
+The producer sends items over the returned channel, and the consumer consumes
+those items on a configurable number of goroutines. The consumer blocks
+until it is finished.
+.background media/plane_bg.png
+
+* Diagram
+.image media/diagram.png
+.background media/plane_bg.png
+
+* Other Features
+- Should exit cleanly when the context is cancelled or times out.
+- Should stop when the producer runs out of items and all consumers are done.
+.background media/plane_bg.png
+
+* Producer
+.code -numbers main.go /func producer/,/^}/
+.background media/plane_bg.png
+
+* Consumer
+.code -numbers main.go /func consumer/,/^}/
+.background media/plane_bg.png
+
+* Processor
+.code -numbers main.go /func processor/,/^}/
+.background media/plane_bg.png
+
+* main
+.code main.go /func main/,/defer cancel/
+.play main.go /Start the producer/,/consumer\(/
+.background media/plane_bg.png
+
+
+* Further Reading
+.link https://golang.org/pkg/context/
+.link https://blog.golang.org/context
+.link https://blog.golang.org/pipelines
+.background media/plane_bg.png

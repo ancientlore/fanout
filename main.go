@@ -26,16 +26,16 @@ func producer(ctx context.Context, count int) chan S {
 		done := ctx.Done()
 
 		// important - we need to close the result channel when finished
-		defer close(c)
+		defer close(c) // HL
 
 		// produce data items on the channel
 		for i := 0; i < count; i++ {
 			s := S{Name: fmt.Sprintf("Item number %d", i+1), ID: i}
 			select {
-			case <-done:
+			case <-done: // HL
 				// processing cancelled; return
 				return
-			case c <- s:
+			case c <- s: // HL
 				// new item sent
 			}
 		}
@@ -54,16 +54,16 @@ func consumer(ctx context.Context, c chan S, threadCount int) {
 
 	// start goroutines to process the channel
 	for i := 0; i < threadCount; i++ {
-		go func(id int) {
+		go func(id int) { // HL
 			// process until cancelled or the channel is closed
-			processor(ctx, id, c)
+			processor(ctx, id, c) // HL
 			// decrement wait group counter
-			wg.Done()
+			wg.Done() // HL
 		}(i)
 	}
 
 	// Wait until all threads are done
-	wg.Wait()
+	wg.Wait() // HL
 }
 
 // processor reads messages on c and processes them.
@@ -71,10 +71,10 @@ func processor(ctx context.Context, id int, c chan S) {
 	done := ctx.Done()
 	for {
 		select {
-		case <-done:
+		case <-done: // HL
 			// processing cancelled; return
 			return
-		case item, ok := <-c:
+		case item, ok := <-c: // HL
 			if !ok {
 				// channel closed; all done
 				return
