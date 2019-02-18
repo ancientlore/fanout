@@ -22,6 +22,11 @@ We're creating a simple producer-consumer demo application.
 The producer sends items over the returned channel, and the consumer consumes
 those items on a configurable number of goroutines. The consumer blocks
 until it is finished.
+
+Go features:
+- Concurrent execution (goroutines)
+- Synchronization and messaging (channels)
+- Multi-way concurrent control (select)
 .background media/plane_bg.png
 
 * Diagram
@@ -29,8 +34,15 @@ until it is finished.
 .background media/plane_bg.png
 
 * Other Features
-- Should exit cleanly when the context is cancelled or times out.
-- Should stop when the producer runs out of items and all consumers are done.
+Cancel processing cleanly and time out.
+- context package provides a type to pass to all functions.
+- context has a deadline capability and a "done" channel to enable canceling.
+
+End gracefully when producer runs out of work
+- Producer closes channel when done.
+- Consumers automatically end when no more work is available.
+.caption context.Context
+.iframe https://golang.org/pkg/context/#Context 300 960
 .background media/plane_bg.png
 
 * Producer
@@ -50,10 +62,20 @@ until it is finished.
 .play main.go /Start the producer/,/consumer\(/
 .background media/plane_bg.png
 
+* Take-aways
+- Get to know the context package if you don't already.
+- Don't communicate by sharing memory, share memory by communicating.
+- There is often not a reason for buffered channels.
+- Buffering removes synchronization.
+- From Rob Pike: "Concurrency is a way to structure a program by breaking it into pieces that can be executed independently."
+- Note how each goroutine operates sequentially.
+.background media/plane_bg.png
 
 * Further Reading
 .link https://golang.org/pkg/context/
 .link https://blog.golang.org/context
 .link https://blog.golang.org/pipelines
 .link https://blog.golang.org/concurrency-is-not-parallelism
+.link https://talks.golang.org/2012/concurrency.slide
+.link swtch.com/~rsc/thread/
 .background media/plane_bg.png
