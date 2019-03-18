@@ -1,7 +1,7 @@
 fanout
-A demo showing how to process incoming requests in parallel.
+A producer/multiple consumer demo in Go.
 18:00 20 Feb 2019
-Tags: golang, channel, concurrency, demo, producer, consumer
+Tags: golang, channel, concurrency, demo, producer, consumer, goroutine, context
 
 Michael Lore
 Principal Architect, SAP Concur
@@ -29,6 +29,11 @@ Go features:
 - Multi-way concurrent control (select)
 .background media/plane_bg.png
 
+: Why I chose this:
+: Better understanding of channels and goroutines. (Must close channel? Buffering?)
+: Learn some useful patterns.
+: Learn how to do this cleanly (cancel, etc.)
+
 * Diagram
 .image media/diagram.png
 .background media/plane_bg.png
@@ -45,22 +50,45 @@ End gracefully when producer runs out of work
 .iframe https://golang.org/pkg/context/#Context 300 960
 .background media/plane_bg.png
 
+: Using the context package to cancel cleanly.
+: Understanding ending the work gracefully.
+: In the past - passing around a "Done" channel.
+
 * Producer
 .code -numbers main.go /func producer/,/^}/
 .background media/plane_bg.png
+
+: Starting a goroutine for the producer, and then returning the channel it sends on.
+: Close the channel when done - this triggers the "clean exit" when consumers are done.
+: Also check for cancelation (context done channel).
+: Is this goroutine is initially blocked?
+: Note Context - it should be the first parameter by convention.
 
 * Consumer
 .code -numbers main.go /func consumer/,/^}/
 .background media/plane_bg.png
 
+: Start multiple goroutines reading the channel from the producer.
+: Go advises not to use locks. Why is the WaitGroup okay?
+: Function blocks until processing is canceled or complete.
+: Note that WaitGroup is not exposed to the processing function - why is this cleaner?
+
 * Processor
 .code -numbers main.go /func processor/,/^}/
 .background media/plane_bg.png
+
+: Reads channel and does work on the item.
+: Checks for closed channel, and checks for context done.
+: Is this a spin-loop?
 
 * main
 .code main.go /func main/,/defer cancel/
 .play main.go /Start the producer/,/consumer\(/
 .background media/plane_bg.png
+
+: Contexts are always created from other contexts, with context.Background() being the root.
+: High-level contexts will cancel lower-level contexts created in the same chain.
+: Our case is simple - just a cancel. We use os/signal to capture ^C.
 
 * Take-aways
 - Get to know the context package if you don't already.
@@ -70,6 +98,10 @@ End gracefully when producer runs out of work
 - From Rob Pike: "Concurrency is a way to structure a program by breaking it into pieces that can be executed independently."
 - Note how each goroutine operates sequentially.
 .background media/plane_bg.png
+
+: Context includes timeouts and variables.
+: http.Request has a context.
+: I often found that buffering deadlocks seemed to "cure" deadlocks - usually reveals a bug though.
 
 * Further Reading
 .link https://golang.org/pkg/context/
