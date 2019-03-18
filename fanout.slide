@@ -110,4 +110,9 @@ End gracefully when producer runs out of work
 .link https://blog.golang.org/concurrency-is-not-parallelism
 .link https://talks.golang.org/2012/concurrency.slide
 .link swtch.com/~rsc/thread/
+
+Event bus example
+
+.link https://levelup.gitconnected.com/lets-write-a-simple-event-bus-in-go-79b9480d8997
+
 .background media/plane_bg.png
