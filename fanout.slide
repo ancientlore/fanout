@@ -1,6 +1,6 @@
 fanout
 A producer/multiple consumer demo in Go.
-18:00 20 Feb 2019
+18:00 20 Mar 2019
 Tags: golang, channel, concurrency, demo, producer, consumer, goroutine, context
 
 Michael Lore
@@ -16,43 +16,159 @@ https://github.com/ancientlore/fanout
 .image media/gopher.png
 .background media/plane_bg.png
 
-* Producer/Consumer Demo applications
+* Producer/Consumer Demo Application
+.image media/diagram.png 300 390
+Demonstrates:
+
+- Concurrent execution (goroutines)
+- Synchronization and messaging (channels)
+- Multi-way concurrent control (select)
+- Complete or cancel gracefully (context)
+
+.background media/plane_bg.png
+
+: Better understanding of channels and goroutines. (Must close channel? Buffering?)
+: Learn some useful patterns.
+: Learn how to do this cleanly (cancel, etc.)
+
+* Review
+.background media/plane_bg.png
+
+* Goroutines
+Start one:
+.play examples/one/main.go /go/,/}/
+Start many:
+.play examples/many/main.go /for/,/}$/
+Better:
+.play examples/many2/main.go /for/,/}$/
+.background media/plane_bg.png
+: In second example, the loop variable captured by function literal
+
+* Goroutines and main
+Does this work?
+.play examples/goroutine/main.go
+.background media/plane_bg.png
+: main exits before the goroutine can run.
+
+* Channels
+Declare a channel:
+
+    var c1 chan bool
+    var crd <-chan bool
+    var cwr chan<- bool
+
+Create a channel:
+
+    c := make(chan bool)
+
+Read from a channel:
+
+    b := <-c
+
+Send on a channel:
+
+    c <- true
+
+.background media/plane_bg.png
+
+: Does reading a channel block?
+: Does sending on a channel block?
+
+* Buffered Channels
+
+Create a buffered channel:
+
+    c := make(chan bool, 10)
+
+Usually not needed.
+
+If the buffer isn't full, a context switch isn't necessarily triggered.
+
+.background media/plane_bg.png
+: In my experience, buffered channels often masked deadlock situations that were a flaw in the design.
+
+* Closing a Channel
+
+Close a channel:
+
+    close(c)
+
+Test for a closed channel while reading:
+
+    b, ok := <-c
+    if !ok {
+        // Channel was closed
+    }
+
+.background media/plane_bg.png
+
+: Do channels NEED to be closed?
+: Why can they be closed?
+
+* Channel example
+This example shows channel behavior.
+.play examples/close/main.go
+.background media/plane_bg.png
+: What does a channel return for b if it is closed?
+
+* Range
+You can also use range with channels.
+.play examples/range/main.go
+.background media/plane_bg.png
+: When using range, you must close the channel or the loop never ends.
+
+* Signaling using a channel
+What is wrong?
+.play examples/signal/main.go
+.background media/plane_bg.png
+: Only one goroutine ever gets the message that we're done.
+
+* Signaling using close(chan)
+Using close works better.
+.play examples/signal2/main.go
+.background media/plane_bg.png
+: All goroutines see the channel closed.
+: Close is very useful!
+
+* Select
+What if I need to wait on multiple channels?
+.play examples/select/main.go /func main/,/^}/
+.background media/plane_bg.png
+: Is this a spin-wait loop?
+
+* Select with a timeout
+In this example, I'll only wait 100ms for an answer:
+.play examples/timeout/main.go /func main/,/^}/
+.background media/plane_bg.png
+
+* Context
+"A Context carries a deadline, a cancelation signal, and other values across API boundaries.
+Context's methods may be called by multiple goroutines simultaneously."
+.caption context.Context
+.iframe https://golang.org/pkg/context/#Context 400 960
+.background media/plane_bg.png
+: By convention a context is the first argument to a function.
+: Contexts are chained together in a tree starting with a root context.
+
+* Context with timeout
+In this example, I'll only wait 100ms for an answer:
+.play examples/context/main.go /func rcv/,/Sleep.*$/
+Multiple goroutines can use this same context and timeout.
+.background media/plane_bg.png
+
+* Code
+.background media/plane_bg.png
+
+* Main
 We're creating a simple producer-consumer demo application.
 .code -numbers main.go /Start the producer/,/consumer\(/
 The producer sends items over the returned channel, and the consumer consumes
 those items on a configurable number of goroutines. The consumer blocks
 until it is finished.
 
-Go features:
-- Concurrent execution (goroutines)
-- Synchronization and messaging (channels)
-- Multi-way concurrent control (select)
+We capture kill and interrupt signals to cleanly cancel processing.
+We end the consumer goroutines gracefully by closing the producer channel.
 .background media/plane_bg.png
-
-: Why I chose this:
-: Better understanding of channels and goroutines. (Must close channel? Buffering?)
-: Learn some useful patterns.
-: Learn how to do this cleanly (cancel, etc.)
-
-* Diagram
-.image media/diagram.png
-.background media/plane_bg.png
-
-* Other Features
-Cancel processing cleanly and time out.
-- context package provides a type to pass to all functions.
-- context has a deadline capability and a "done" channel to enable canceling.
-
-End gracefully when producer runs out of work
-- Producer closes channel when done.
-- Consumers automatically end when no more work is available.
-.caption context.Context
-.iframe https://golang.org/pkg/context/#Context 300 960
-.background media/plane_bg.png
-
-: Using the context package to cancel cleanly.
-: Understanding ending the work gracefully.
-: In the past - passing around a "Done" channel.
 
 * Producer
 .code -numbers main.go /func producer/,/^}/
@@ -60,7 +176,7 @@ End gracefully when producer runs out of work
 
 : Starting a goroutine for the producer, and then returning the channel it sends on.
 : Close the channel when done - this triggers the "clean exit" when consumers are done.
-: Also check for cancelation (context done channel).
+: Ah-ha! You can also use select when sending on a channel.
 : Is this goroutine is initially blocked?
 : Note Context - it should be the first parameter by convention.
 
@@ -80,6 +196,7 @@ End gracefully when producer runs out of work
 : Reads channel and does work on the item.
 : Checks for closed channel, and checks for context done.
 : Is this a spin-loop?
+: What about in-flight requests? Is closing the producer channel enough?
 
 * main
 .code main.go /func main/,/defer cancel/
@@ -104,12 +221,12 @@ End gracefully when producer runs out of work
 : I often found that buffering deadlocks seemed to "cure" deadlocks - usually reveals a bug though.
 
 * Further Reading
-.link https://golang.org/pkg/context/
-.link https://blog.golang.org/context
 .link https://blog.golang.org/pipelines
+.link https://blog.golang.org/context
+.link https://golang.org/pkg/context/
 .link https://blog.golang.org/concurrency-is-not-parallelism
 .link https://talks.golang.org/2012/concurrency.slide
-.link swtch.com/~rsc/thread/
+.link https://swtch.com/~rsc/thread/
 
 Event bus example
 

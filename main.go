@@ -16,7 +16,7 @@ type S struct {
 }
 
 // producer generates up to count data items on the returned channel.
-func producer(ctx context.Context, count int) chan S {
+func producer(ctx context.Context, count int) <-chan S {
 	// make result channel
 	c := make(chan S)
 
@@ -47,7 +47,7 @@ func producer(ctx context.Context, count int) chan S {
 
 // consumer spawns threadCount goroutines to processes messages on c,
 // and waits for them to finish.
-func consumer(ctx context.Context, c chan S, threadCount int) {
+func consumer(ctx context.Context, c <-chan S, threadCount int) {
 	// Initialize wait group with number of threads/goroutines
 	var wg sync.WaitGroup
 	wg.Add(threadCount)
@@ -67,7 +67,7 @@ func consumer(ctx context.Context, c chan S, threadCount int) {
 }
 
 // processor reads messages on c and processes them.
-func processor(ctx context.Context, id int, c chan S) {
+func processor(ctx context.Context, id int, c <-chan S) {
 	done := ctx.Done()
 	for {
 		select {
