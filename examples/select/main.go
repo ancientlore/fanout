@@ -10,13 +10,13 @@ func main() {
 	done := make(chan struct{})
 	go func() {
 		for {
-			select {
+			select { // HL
 			case <-done:
 				fmt.Println("Done.")
 				return
 			case s := <-c:
 				fmt.Println(s)
-			}
+			} // HL
 		}
 	}()
 

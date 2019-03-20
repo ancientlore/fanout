@@ -166,7 +166,7 @@ The producer sends items over the returned channel, and the consumer consumes
 those items on a configurable number of goroutines. The consumer blocks
 until it is finished.
 
-We capture kill and interrupt signals to cleanly cancel processing.
+We capture kill and interrupt signals (using os/signal) to cleanly cancel processing.
 We end the consumer goroutines gracefully by closing the producer channel.
 .background media/plane_bg.png
 
