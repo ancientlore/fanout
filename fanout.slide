@@ -42,13 +42,13 @@ Start many:
 Better:
 .play examples/many2/main.go /for/,/}$/
 .background media/plane_bg.png
-: In second example, the loop variable captured by function literal
+: In second example, the loop variable captured by function literal. The goroutines don't start until the loop is finished.
 
 * Goroutines and main
 Does this work?
 .play examples/goroutine/main.go
 .background media/plane_bg.png
-: main exits before the goroutine can run.
+: No. main exits before the goroutine can run.
 
 * Channels
 Declare a channel:
@@ -71,8 +71,9 @@ Send on a channel:
 
 .background media/plane_bg.png
 
-: Does reading a channel block?
-: Does sending on a channel block?
+: You can declare read-only channel variables and write-only channel variables.
+: Does reading a channel block? (Yes, when it's empty.)
+: Does sending on a channel block? (Yes, when it's full.)
 
 * Buffered Channels
 
@@ -86,6 +87,7 @@ If the buffer isn't full, a context switch isn't necessarily triggered.
 
 .background media/plane_bg.png
 : In my experience, buffered channels often masked deadlock situations that were a flaw in the design.
+: Know why you are using buffering - there are valid use cases, but often you don't need or want buffering.
 
 * Closing a Channel
 
@@ -102,7 +104,7 @@ Test for a closed channel while reading:
 
 .background media/plane_bg.png
 
-: Do channels NEED to be closed?
+: Do channels NEED to be closed? (Sometimes - not because you need to reclaim a handle, but because they could be blocking other goroutines.)
 : Why can they be closed?
 
 * Channel example
@@ -122,6 +124,7 @@ What is wrong?
 .play examples/signal/main.go
 .background media/plane_bg.png
 : Only one goroutine ever gets the message that we're done.
+: There is a better way.
 
 * Signaling using close(chan)
 Using close works better.
@@ -134,12 +137,13 @@ Using close works better.
 What if I need to wait on multiple channels?
 .play examples/select/main.go /func main/,/^}/
 .background media/plane_bg.png
-: Is this a spin-wait loop?
+: Is this a spin-wait loop? (No, because select blocks.)
 
 * Select with a timeout
 In this example, I'll only wait 100ms for an answer:
 .play examples/timeout/main.go /func main/,/^}/
 .background media/plane_bg.png
+: time.Timer exposes a channel that is signaled when the timeout occurs.
 
 * Context
 "A Context carries a deadline, a cancelation signal, and other values across API boundaries.
@@ -177,7 +181,7 @@ We end the consumer goroutines gracefully by closing the producer channel.
 : Starting a goroutine for the producer, and then returning the channel it sends on.
 : Close the channel when done - this triggers the "clean exit" when consumers are done.
 : Ah-ha! You can also use select when sending on a channel.
-: Is this goroutine is initially blocked?
+: Is this goroutine is initially blocked? (It blocks once the channel is full.)
 : Note Context - it should be the first parameter by convention.
 
 * Consumer
@@ -185,7 +189,7 @@ We end the consumer goroutines gracefully by closing the producer channel.
 .background media/plane_bg.png
 
 : Start multiple goroutines reading the channel from the producer.
-: Go advises not to use locks. Why is the WaitGroup okay?
+: Go advises not to use locks. Why is the WaitGroup okay? (WaitGroup is only used to monitor threads, not to share memory between threads.)
 : Function blocks until processing is canceled or complete.
 : Note that WaitGroup is not exposed to the processing function - why is this cleaner?
 
@@ -196,7 +200,7 @@ We end the consumer goroutines gracefully by closing the producer channel.
 : Reads channel and does work on the item.
 : Checks for closed channel, and checks for context done.
 : Is this a spin-loop?
-: What about in-flight requests? Is closing the producer channel enough?
+: What about in-flight requests? Is closing the producer channel enough? (In this example, it would be.)
 
 * main
 .code main.go /func main/,/defer cancel/
