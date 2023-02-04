@@ -1,3 +1,3 @@
 module github.com/ancientlore/fanout
 
-go 1.14
+go 1.19
